@@ -1,10 +1,10 @@
 const Candle = require('./Candle');
 
 /** GLOBALS */
-const PERCENTAGE_HIGH_ALLOWED_INTRO_BAR = 1; // 3
+const PERCENTAGE_HIGH_ALLOWED_INTRO_BAR = 1.45; // 3
 const PERCENTAGE_HEIGHT_ALLOWED_INTRO_BAR = -45.0; // 60
 const PERCENTAGE_HEIGHT_ALLOWED_WRB = 95.0; // 100
-const PERCENTAGE_HIGH_ALLOWED_WRB = 1.15; // was not using
+const PERCENTAGE_HIGH_ALLOWED_WRB = .85; // was not using
 const NUM_BARS_ABOVE_AVERAGE = 5;
 const DEBUG = false;
 
@@ -58,7 +58,7 @@ CandleChart.prototype.isCandleThreeBarPlayIntro = function(candle) {
     var nextCandleData = this.getCandleData(nextCandleTimeStamp);
     
     // % Difference in height
-    var percentageDifferenceHeightNextCandle = this.candleHeightPercentageDifference(candle.getCandleBodyHeight(), this.getCandleBodyHeight(nextCandleData));
+    var percentageDifferenceHeightNextCandle = this.candleHeightPercentageDifference(candle.getCandleHeight(), this.getCandleHeight(nextCandleData));
     
     // % Difference in Price high
     var percentageDifferenceHighNextCandle = Math.abs(this.priceHighPercentageDifference(candle.high, nextCandleData["2. high"]));
