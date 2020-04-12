@@ -42,13 +42,6 @@ CandleFacade.prototype.findThreeBarPlayIntrosToday = function() {
     return threeBarPlayIntros;
 }
 
-/** Find all Igniting bars in TODAYS DATE */
-// CandleFacade.prototype.findAllIgnitingBars = function() {
-//     var wrCandles = this.candleChart.findAllIgnitingGreenCandles();
-//     wrCandles = this.candleChart.filterDatesNotFromToday(wrCandles);
-//     // wrCandles = this.candleChart.filterHoursLessThanHours(wrCandles, 2);
-//     return moneyBarsTimeStamps;
-// }
 
 CandleFacade.prototype.isMostRecentCandleWideRanging = function(timeFrame) {
     /** Is Specific Bar a Wide Ranging Igniting Bar */
@@ -59,6 +52,20 @@ CandleFacade.prototype.isMostRecentCandleWideRanging = function(timeFrame) {
     wrCandle.setCandleProperties(this.candleChart.tickerSymbol, moneyBarTimeStampKey, timeFrame, 
         moneyBar["1. open"], moneyBar["2. high"], moneyBar["3. low"], moneyBar["4. close"], moneyBar["5. volume"]);
     if (this.candleChart.isWideRangeCandle(wrCandle, moneyBarIndex) && wrCandle.isGreenCandle()) {
+        return wrCandle;
+    }
+    return null;
+}
+
+CandleFacade.prototype.isMostRecentCandleGap = function(timeFrame) {
+    /** Is Specific Bar a Gap Bar */
+    var moneyBarTimeStampKey = this.candleChart.getMostRecentCandle();
+    var moneyBar = this.candleChart.getCandleData(moneyBarTimeStampKey);
+    var moneyBarIndex = this.candleChart.getCandleIndex(moneyBarTimeStampKey);
+    var wrCandle = new Candle();
+    wrCandle.setCandleProperties(this.candleChart.tickerSymbol, moneyBarTimeStampKey, timeFrame, 
+        moneyBar["1. open"], moneyBar["2. high"], moneyBar["3. low"], moneyBar["4. close"], moneyBar["5. volume"]);
+    if (this.candleChart.isGapCandle(wrCandle, moneyBarIndex)) {
         return wrCandle;
     }
     return null;

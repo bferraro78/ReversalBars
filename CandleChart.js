@@ -5,7 +5,7 @@ const PERCENTAGE_HIGH_ALLOWED_INTRO_BAR = 1.45; // 3
 const PERCENTAGE_HEIGHT_ALLOWED_INTRO_BAR = -45.0; // 60
 const PERCENTAGE_HEIGHT_ALLOWED_WRB = 95.0; // 100
 const PERCENTAGE_HIGH_ALLOWED_WRB = .85; // was not using
-const NUM_BARS_ABOVE_AVERAGE = 5;
+const NUM_BARS_ABOVE_AVERAGE = 4;
 const DEBUG = false;
 
 CandleChart = function(candles, tickerSymbol, timeFrame) {
@@ -50,7 +50,7 @@ CandleChart.prototype.findAllIgnitingGreenCandles = function() {
     return ignitingGreenCandles;
 }
 
-/** Comapres the HIGH and BODY HEIGHT of the money bar and its next candle */
+/** Comapres the HIGH and HEIGHT of the money bar and its next candle */
 CandleChart.prototype.isCandleThreeBarPlayIntro = function(candle) {
     var candleIndex = this.getCandleIndex(candle.timeStamp);
     var nextCandleIndex = (candleIndex > 0) ? --candleIndex : 0;
@@ -112,13 +112,18 @@ CandleChart.prototype.isWideRangeCandle = function(candle, moneyBarIndex) {
     return false;
 }
 
-CandleChart.prototype.isIgnitingCandle = function(moneyBarHigh, moneyBarIndex) {
-    // Is is above average in height/price ;) 
-    var averagePriceHigh = this.averagePriceHighOfCandlesFromIndex(moneyBarIndex);
-    var isAboveAverageHeight = moneyBarHigh > averagePriceHigh;
+/**
+ * Check if most recent candle is a gap candle
+ * 1. Checks if the candles lowest body is higher than
+ *    the previous candle's high 
+ */
+CandleChart.prototype.isGapCandle = function(candle, moneyBarIndex) {
+    var lowestBody = candle.getCandleLowestBody();
+    var previousCandleIndex = ++moneyBarIndex;
+    var previousCandle = this.getCandleAtIndex(previousCandleIndex);
+    var isGapCandle = lowestBody >= previousCandle["2. high"];
 
-    // Check if it is igniting  bar
-    if (isAboveAverageHeight) {
+    if (isGapCandle) {
         return true;
     }
     return false;

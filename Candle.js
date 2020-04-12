@@ -40,12 +40,19 @@ class Candle {
         }
     }
 
-    
+    getCandleLowestBody() {
+        if (this.open >= this.close) {
+            return this.close;
+        } else {
+            return this.open;
+        }
+    }
+
     getCandleHeight() {
         return this.high - this.low;
     }
 
-    printCandle() {
+    printThreeBarCandle() {
         var path = __dirname + "/Backtesting.txt";
 
         // fs.unlinkSync(path)
@@ -68,6 +75,16 @@ class Candle {
                 return console.log(err);
             }
         });
+    }
+
+    printWideRangeCandle() {
+        console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
+        console.log(`Height % Above Average: ${this.percentageHighAboveHigh}`);
+        console.log(`Height % Above Average: ${this.percentageHeightAboveAverage}\n`);
+    }
+
+    printGapCandle() {
+        console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
     }
 
 }
