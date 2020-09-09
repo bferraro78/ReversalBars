@@ -25,21 +25,21 @@ const candleStickPriceHistoryOptions = {
 
 
 var symbolLookUp = process.argv[2];
-
+var isShort = (process.argv[3] === "s") ? true : false;
 
 var symbols = [];
 if (symbolLookUp === "1") { // Midday Trades
     symbols = ["MGM",
       "BAC", "F", "AMD", "USO", "SBUX",
       "INTC", "GE", "W", "AAL", "UAL", "DAL",
-      "XOM", "M", "C", "DENN", "ROKU", "PUMP", "CHK",
-      "MFA", "OXY", "F", "VAL", "MRO", "APA",
+      "XOM", "M", "C", "DENN", "ROKU", "CHK",
+      "MFA", "OXY", "VAL", "MRO", "APA",
       "SHIP", "HAL", "T", "UCO", "MBRX", "PLAY"];
 } else if (symbolLookUp === "2") { // Morning Trades
     symbols = ["TRV", "TWTR", "PSNL", "DE",
      "CAT", "MGM", "BAC", "F",
      "AMD", "USO", "PFE", "SBUX",
-     "SPY", "APRN", "WHF", "INTC",
+     "SPY", "APRN", "INTC",
      "GE", "W", "AAL", "UAL", "DAL",
      "DK", "T", "NIO", "XOM",
      "M", "C", "DENN", "ROKU",
@@ -47,18 +47,19 @@ if (symbolLookUp === "1") { // Midday Trades
      "BA", "WFC", "UBER", "MU", 
      "ACB", "X", "NCLH", "BP", 
      "PTON", "CPE", "VEA", "JPM", 
-     "NLY", "VALE", "SNAP", "UGAZ",
+     "NLY", "VALE", "SNAP",
      "BBY", "ADMA", "PLT", "BSGM", 
      "ARNC", "UCO", "SRNE", "ENIA",
      "BNO", "APA", "OIL", "PAYS", 
-     "EQT", "PUMP", "BBBY", "NUS"];
+     "BBBY", "NUS", "JBLU", "MOSY"];
 } else {
-    symbols = ["AMD"]; // DEBUG SYMBOL
+    symbols = ["C"]; // DEBUG SYMBOL
 }
 
 console.log(`\nTicker Length:  ${symbols.length}\n`);
+console.log(`${(isShort) ? "Short" : "Long"}\n`);
 
-var timeFrame = 15;
+var timeFrame = 5;
 
 var PROMISES = [];
 
@@ -125,9 +126,9 @@ function calculateStonks(candlesDTO, tickerSymbol, timeFrame) {
     candleFacade.setCandleChart(candlesDTO, tickerSymbol, timeFrame);
     var bars = [];
 
-    bars = isMostRecentCandleGap(candleFacade, timeFrame);
+    // bars = isMostRecentCandleGap(candleFacade, timeFrame);
+    bars = findThreeBarPlays(candleFacade);
     // bars = isMostRecentCandleWideRanging(candleFacade, timeFrame);
-    // bars = findThreeBarPlays(candleFacade);
     return bars;
 }
 
@@ -139,11 +140,11 @@ function findThreeBarPlays(candleFacade) {
 }
 
 function findThreeBarPlayIntrosToday(candleFacade) {
-    return candleFacade.findThreeBarPlayIntrosToday();
+    return (isShort) ? candleFacade.findThreeBarPlayIntrosTodayShort() : candleFacade.findThreeBarPlayIntrosTodayLong();
 }
 
 function findThreeBarPlayIntrosPriceHistory(candleFacade) {
-    return candleFacade.findThreeBarPlayIntrosPriceHistory();
+    return (isShort) ? candleFacade.findThreeBarPlayIntrosPriceHistoryShort() : candleFacade.findThreeBarPlayIntrosPriceHistoryLong();
 }
 
 function isMostRecentCandleWideRanging(candleFacade, timeFrame) {
@@ -172,7 +173,7 @@ function printResult(threeBarPlaysIntros) {
         } else if (PRINT_CANDLE === "WIDE_RANGE") {
             tbp.printWideRangeCandle();
         } else {
-            tbp.printThreeBarCandle();
+            (isShort) ? tbp.printThreeBarCandleShort() : tbp.printThreeBarCandleLong();
         }
     });
     console.log(`Found ${flattendedThreeBarPlays.length} Barz\n`);

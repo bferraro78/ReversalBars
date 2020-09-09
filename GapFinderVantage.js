@@ -2,6 +2,10 @@ const https = require('https'), request = require("request"), fs = require('fs')
 var CandleFacade = require('./CandleFacade').CandleFacade;
 
 
+/* SETTINGS */
+const VANTAGE_API_KEY = "D0Y9ZR02DFYZ0HAN";
+const VANTAGE_PREMIUM_KEY = "TW8HYCEY4TNMDIMR"
+
 
 /** GLOBALS */
 var TICKER_COUNT = 0;
@@ -49,8 +53,8 @@ if (symbolLookUp === "1") {
 console.log(`\nTicker Length:  ${symbols.length}\n`)
 symbols.forEach(tickerSymbol => {
     // getStockCandleChart(tickerSymbol, symbols.length, 1);
-    // getStockCandleChart(tickerSymbol, symbols.length, 5);
-    getStockCandleChart(tickerSymbol, symbols.length, 15);
+    getStockCandleChart(tickerSymbol, symbols.length, 5);
+    // getStockCandleChart(tickerSymbol, symbols.length, 15)cls;
     // getStockCandleChart(tickerSymbol, symbols.length, 30);
 
 });

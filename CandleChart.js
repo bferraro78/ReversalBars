@@ -4,7 +4,9 @@ const Candle = require('./Candle');
 const PERCENTAGE_HIGH_ALLOWED_INTRO_BAR = 1.45; // 3
 const PERCENTAGE_HEIGHT_ALLOWED_INTRO_BAR = -45.0; // 60
 const PERCENTAGE_HEIGHT_ALLOWED_WRB = 95.0; // 100
-const PERCENTAGE_HIGH_ALLOWED_WRB = .85; // was not using
+const PERCENTAGE_PRICE_HIGH_ALLOWED_WRB = .85; // was not using
+const PERCENTAGE_PRICE_LOW_ALLOWED_WRB = .60;
+
 const NUM_BARS_ABOVE_AVERAGE = 4;
 const DEBUG = false;
 
@@ -25,33 +27,33 @@ CandleChart.prototype.findAllWideRangeGreenCandles = function() {
             moneyBar["1. open"], moneyBar["2. high"], moneyBar["3. low"], moneyBar["4. close"], moneyBar["5. volume"]);
 
         // Check if it is green wide range bar
-        if (wrCandle.isGreenCandle() && this.isWideRangeCandle(wrCandle, moneyBarIndex)) {
+        if (wrCandle.isGreenCandle() && this.isWideRangeCandleLong(wrCandle, moneyBarIndex)) {
             wideRangeGreenCandles.push(wrCandle);
         }
     }
     return wideRangeGreenCandles;
 }
 
-CandleChart.prototype.findAllIgnitingGreenCandles = function() {
-    var ignitingGreenCandles = [];
+CandleChart.prototype.findAllWideRangeRedCandles = function() {
+    var wideRangeGreenCandles = [];
     for (var moneyBarTimeStampKey in this.candles) {
         var moneyBar = this.getCandleData(moneyBarTimeStampKey);
         var moneyBarIndex = this.getCandleIndex(moneyBarTimeStampKey);
 
-        var candle = new Candle();
-        candle.setCandleProperties(this.tickerSymbol, moneyBarTimeStampKey, this.timeFrame, 
+        var wrCandle = new Candle();
+        wrCandle.setCandleProperties(this.tickerSymbol, moneyBarTimeStampKey, this.timeFrame, 
             moneyBar["1. open"], moneyBar["2. high"], moneyBar["3. low"], moneyBar["4. close"], moneyBar["5. volume"]);
 
-        // Check if it is green igniting bar
-        if (this.isGreenCandle(moneyBar) && this.isIgnitingCandle(candle.high, moneyBarIndex)) {
-            ignitingGreenCandles.push(candle);
+        // Check if it is red wide range bar
+        if (!wrCandle.isGreenCandle() && this.isWideRangeCandleShort(wrCandle, moneyBarIndex)) {
+            wideRangeGreenCandles.push(wrCandle);
         }
     }
-    return ignitingGreenCandles;
+    return wideRangeGreenCandles;
 }
 
 /** Comapres the HIGH and HEIGHT of the money bar and its next candle */
-CandleChart.prototype.isCandleThreeBarPlayIntro = function(candle) {
+CandleChart.prototype.isCandleThreeBarPlayIntroLong = function(candle) {
     var candleIndex = this.getCandleIndex(candle.timeStamp);
     var nextCandleIndex = (candleIndex > 0) ? --candleIndex : 0;
     var nextCandleTimeStamp = this.getCandleAtIndex(nextCandleIndex);
@@ -61,7 +63,7 @@ CandleChart.prototype.isCandleThreeBarPlayIntro = function(candle) {
     var percentageDifferenceHeightNextCandle = this.candleHeightPercentageDifference(candle.getCandleHeight(), this.getCandleHeight(nextCandleData));
     
     // % Difference in Price high
-    var percentageDifferenceHighNextCandle = Math.abs(this.priceHighPercentageDifference(candle.high, nextCandleData["2. high"]));
+    var percentageDifferenceHighNextCandle = Math.abs(this.pricePercentageDifference(candle.high, nextCandleData["2. high"]));
 
     if (DEBUG) {
         console.log(`${candle.timeStamp}`)
@@ -78,18 +80,47 @@ CandleChart.prototype.isCandleThreeBarPlayIntro = function(candle) {
     return false;
 }
 
+/** Comapres the LOW and HEIGHT of the money bar and its next candle */
+CandleChart.prototype.isCandleThreeBarPlayIntroShort = function(candle) {
+    var candleIndex = this.getCandleIndex(candle.timeStamp);
+    var nextCandleIndex = (candleIndex > 0) ? --candleIndex : 0;
+    var nextCandleTimeStamp = this.getCandleAtIndex(nextCandleIndex);
+    var nextCandleData = this.getCandleData(nextCandleTimeStamp);
+    
+    // % Difference in height
+    var percentageDifferenceHeightNextCandle = this.candleHeightPercentageDifference(candle.getCandleHeight(), this.getCandleHeight(nextCandleData));
+    
+    // % Difference in Price high
+    var percentageDifferencePriceNextCandle = Math.abs(this.pricePercentageDifference(candle.low, nextCandleData["3. low"]));
+
+    if (DEBUG) {
+        console.log(`${candle.timeStamp}`)
+        console.log(`${percentageDifferenceHeightNextCandle} Percentage Height Next Candle`);
+        console.log(`${percentageDifferencePriceNextCandle} Percentage Low Next Candle\n`);
+    }
+
+    if (percentageDifferenceHeightNextCandle <= PERCENTAGE_HEIGHT_ALLOWED_INTRO_BAR && 
+        percentageDifferencePriceNextCandle <= PERCENTAGE_HIGH_ALLOWED_INTRO_BAR)
+         {
+        candle.setTrendReversalCandleProperties(percentageDifferenceHeightNextCandle, percentageDifferencePriceNextCandle);
+        return true;
+    }
+    return false;
+}
+
+
 /**
  * averageHeightOfCandlesFromIndex - average candle BODY height of last NUM_BARS_ABOVE_AVERAGE candles
  * averagePriceHighOfCandlesFromIndex - average HIGH of last NUM_BARS_ABOVE_AVERAGE candles
  */
-CandleChart.prototype.isWideRangeCandle = function(candle, moneyBarIndex) {
+CandleChart.prototype.isWideRangeCandleLong = function(candle, moneyBarIndex) {
     // Is is above average in height/price ;) 
     var averageHeight = this.averageHeightOfCandlesFromIndex(moneyBarIndex);
     var averagePriceHigh = this.averagePriceHighOfCandlesFromIndex(moneyBarIndex);
 
-    var percentageHeightAboveAverage = this.candleHeightPercentageDifference(averageHeight, candle.getCandleBodyHeight()); // height above average
-    var percentageHighAboveHigh = this.priceHighPercentageDifference(averagePriceHigh, candle.high); // price above average
-    var gapLevel = this.getGapLevelFromCandle(candle.high, moneyBarIndex);
+    var percentageHeightComparedAverage = this.candleHeightPercentageDifference(averageHeight, candle.getCandleBodyHeight()); // height above average
+    var percentagePriceComparedHigh = this.pricePercentageDifference(averagePriceHigh, candle.high); // price above average
+    var gapLevel = this.getGapLevelFromCandleHigh(candle.high, moneyBarIndex);
 
     if (DEBUG) {
         console.log(this.tickerSymbol + " - " + candle.timeStamp);
@@ -98,15 +129,49 @@ CandleChart.prototype.isWideRangeCandle = function(candle, moneyBarIndex) {
         console.log("MB height: " + candle.getCandleBodyHeight());
         console.log("MB high: " + candle.high);
         console.log(`Gappage: ${gapLevel}`);
-        console.log(`${percentageHeightAboveAverage} Percentage Above Average Height`);
-        console.log(`${percentageHighAboveHigh} Percentage Above Average Price`);
+        console.log(`${percentageHeightComparedAverage} Percentage Above Average Height`);
+        console.log(`${percentagePriceComparedHigh} Percentage Above Average Price`);
         console.log(`_______________________________________\n\n`);
     }
 
     // Check if it is wide range bar
-    if (percentageHeightAboveAverage >= PERCENTAGE_HEIGHT_ALLOWED_WRB && 
-        percentageHighAboveHigh >= PERCENTAGE_HIGH_ALLOWED_WRB) {
-        candle.setWideRangeCandleProperties(percentageHeightAboveAverage, percentageHighAboveHigh, gapLevel);
+    if (percentageHeightComparedAverage >= PERCENTAGE_HEIGHT_ALLOWED_WRB && 
+        percentagePriceComparedHigh >= PERCENTAGE_PRICE_HIGH_ALLOWED_WRB) {
+        candle.setWideRangeCandleProperties(percentageHeightComparedAverage, percentagePriceComparedHigh, gapLevel);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * averageHeightOfCandlesFromIndex - average candle BODY height of last NUM_BARS_ABOVE_AVERAGE candles
+ * averagePriceLowOfCandlesFromIndex - average HIGH of last NUM_BARS_ABOVE_AVERAGE candles
+ */
+CandleChart.prototype.isWideRangeCandleShort = function(candle, moneyBarIndex) {
+    // Is is above average in height/price ;) 
+    var averageHeight = this.averageHeightOfCandlesFromIndex(moneyBarIndex);
+    var averagePriceLow = this.averagePriceLowOfCandlesFromIndex(moneyBarIndex);
+
+    var percentageHeightComparedAverage = this.candleHeightPercentageDifference(averageHeight, candle.getCandleBodyHeight()); // height above average
+    var percentageLowComparedLow = this.pricePercentageDifference(candle.low, averagePriceLow); // price above average
+    var gapLevel = this.getGapLevelFromCandleLow(candle.low, moneyBarIndex);
+
+    if (DEBUG) {
+        console.log(this.tickerSymbol + " - " + candle.timeStamp);
+        console.log("avg. candle height: " + averageHeight);
+        console.log("avg. candle Low: " + averagePriceLow);
+        console.log("MB height: " + candle.getCandleBodyHeight());
+        console.log("MB Low: " + candle.low);
+        console.log(`Gappage: ${gapLevel}`);
+        console.log(`${percentageHeightComparedAverage} Percentage Above Average Height`);
+        console.log(`${percentageLowComparedLow} Percentage Below Average Price`);
+        console.log(`_______________________________________\n\n`);
+    }
+
+    // Check if it is wide range bar
+    if (percentageHeightComparedAverage >= PERCENTAGE_HEIGHT_ALLOWED_WRB && 
+        percentageLowComparedLow >= PERCENTAGE_PRICE_LOW_ALLOWED_WRB) {
+        candle.setWideRangeCandleProperties(percentageHeightComparedAverage, percentageLowComparedLow, gapLevel);
         return true;
     }
     return false;
@@ -120,8 +185,19 @@ CandleChart.prototype.isWideRangeCandle = function(candle, moneyBarIndex) {
 CandleChart.prototype.isGapCandle = function(candle, moneyBarIndex) {
     var lowestBody = candle.getCandleLowestBody();
     var previousCandleIndex = ++moneyBarIndex;
-    var previousCandle = this.getCandleAtIndex(previousCandleIndex);
-    var isGapCandle = lowestBody >= previousCandle["2. high"];
+    var previousCandleTimeStamp = this.getCandleAtIndex(previousCandleIndex);
+    var previousCandleData = this.getCandleData(previousCandleTimeStamp);
+    var isGapCandle = lowestBody >= previousCandleData["2. high"];
+
+    var percentageHighAboveHigh = this.pricePercentageDifference(previousCandleData["2. high"], lowestBody); // price above previous
+    candle.percentageDifferenceHigh = percentageHighAboveHigh;
+    
+    if (DEBUG) {
+        console.log(lowestBody);
+        console.log(previousCandleTimeStamp);
+        console.log(previousCandleData["2. high"]);
+        console.log(`% Above Previous Candle ${percentageHighAboveHigh}`)
+    }
 
     if (isGapCandle) {
         return true;
@@ -133,7 +209,7 @@ CandleChart.prototype.isGapCandle = function(candle, moneyBarIndex) {
 /** CALCULATIONS */
 
 /** From a bar, how many bars are below its high (check its gap level) */
-CandleChart.prototype.getGapLevelFromCandle = function(candleHigh, candleIndex) {
+CandleChart.prototype.getGapLevelFromCandleHigh = function(candleHigh, candleIndex) {
     var chartIndex = 0;
     var gapLevel = 0;
 
@@ -141,6 +217,25 @@ CandleChart.prototype.getGapLevelFromCandle = function(candleHigh, candleIndex) 
         if (chartIndex > candleIndex) {
             var chartCandle = this.candles[candleTimeStamp];
             if (candleHigh >= chartCandle["2. high"]) {
+                gapLevel++;
+            } else {
+                break;
+            }
+        }
+        chartIndex++;
+    }
+    return gapLevel;
+}
+
+/** From a bar, how many bars are below its low (check its gap level) */
+CandleChart.prototype.getGapLevelFromCandleLow = function(candleLow, candleIndex) {
+    var chartIndex = 0;
+    var gapLevel = 0;
+
+    for (var candleTimeStamp in this.candles) {
+        if (chartIndex > candleIndex) {
+            var chartCandle = this.candles[candleTimeStamp];
+            if (candleLow <= chartCandle["3. low"]) {
                 gapLevel++;
             } else {
                 break;
@@ -175,6 +270,27 @@ CandleChart.prototype.averageHeightOfCandlesFromIndex = function(candleIndex) {
 CandleChart.prototype.averagePriceHighOfCandlesFromIndex = function(candleIndex) {
     var chartIndex = 0;
     var candlesIterated = 0;
+    var sumOfCandlesLow = 0;
+
+    for (var candleTimeStamp in this.candles) {
+        if (chartIndex > candleIndex) {
+            var candle = this.getCandleData(candleTimeStamp);
+            if (candle) {
+                sumOfCandlesLow += parseFloat(candle["3. low"]);
+            }
+            candlesIterated++;
+            if (candlesIterated == NUM_BARS_ABOVE_AVERAGE) break;
+        }
+        chartIndex++;
+    }
+
+    var averageCandleHigh = (sumOfCandlesLow / candlesIterated);
+    return averageCandleHigh.toFixed(2);
+}
+
+CandleChart.prototype.averagePriceLowOfCandlesFromIndex = function(candleIndex) {
+    var chartIndex = 0;
+    var candlesIterated = 0;
     var sumOfCandlesHigh = 0;
 
     for (var candleTimeStamp in this.candles) {
@@ -201,7 +317,7 @@ CandleChart.prototype.candleHeightPercentageDifference = function(baseCandleHeig
 }
 
 /** moneyBar percentage greater than baseCandle   */
-CandleChart.prototype.priceHighPercentageDifference = function(baseCandle, moneyBarPrice) {
+CandleChart.prototype.pricePercentageDifference = function(baseCandle, moneyBarPrice) {
     var difference = moneyBarPrice - baseCandle;
     var divisor = (difference >= 0) ? baseCandle : moneyBarPrice;
     return ((difference / divisor) * 100.0).toFixed(2);

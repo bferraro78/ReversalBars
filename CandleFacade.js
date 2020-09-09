@@ -14,12 +14,14 @@ CandleFacade.prototype.setCandleChart = function(candlesDTO, tickerSymbol, timeF
 
 /** API */
 
+/** LONG */
+
 /** Find all Wide Ranging Igniting bars WITH 3/4 Bar Play Intro in Price Recent History */
-CandleFacade.prototype.findThreeBarPlayIntrosPriceHistory = function() {
+CandleFacade.prototype.findThreeBarPlayIntrosPriceHistoryLong = function() {
     var threeBarPlayIntros = [];
     var wrCandles = this.candleChart.findAllWideRangeGreenCandles();
     wrCandles.forEach(wrCandle => {
-        if (this.candleChart.isCandleThreeBarPlayIntro(wrCandle)) {
+        if (this.candleChart.isCandleThreeBarPlayIntroLong(wrCandle)) {
             threeBarPlayIntros.push(wrCandle);
         }
     });
@@ -27,7 +29,7 @@ CandleFacade.prototype.findThreeBarPlayIntrosPriceHistory = function() {
 }
 
 /** Find all Wide Ranging Igniting bars WITH 3/4 Bar Play Intro in TODAYS DATE */
-CandleFacade.prototype.findThreeBarPlayIntrosToday = function() {    
+CandleFacade.prototype.findThreeBarPlayIntrosTodayLong = function() {    
     var threeBarPlayIntros = [];
     var wrCandles = this.candleChart.findAllWideRangeGreenCandles();
 
@@ -35,13 +37,12 @@ CandleFacade.prototype.findThreeBarPlayIntrosToday = function() {
     // wrCandles = this.candleChart.filterHoursLessThanHours(wrCandles, 2);
 
     wrCandles.forEach(wrCandle => {
-        if (this.candleChart.isCandleThreeBarPlayIntro(wrCandle)) {
+        if (this.candleChart.isCandleThreeBarPlayIntroLong(wrCandle)) {
             threeBarPlayIntros.push(wrCandle);
         }
     });
     return threeBarPlayIntros;
 }
-
 
 CandleFacade.prototype.isMostRecentCandleWideRanging = function(timeFrame) {
     /** Is Specific Bar a Wide Ranging Igniting Bar */
@@ -70,6 +71,38 @@ CandleFacade.prototype.isMostRecentCandleGap = function(timeFrame) {
     }
     return null;
 }
+
+/** SHORT */
+
+/** Find all Wide Ranging Igniting bars WITH 3/4 Bar Play Intro in Price Recent History */
+CandleFacade.prototype.findThreeBarPlayIntrosPriceHistoryShort = function() {
+    var threeBarPlayIntros = [];
+    var wrCandles = this.candleChart.findAllWideRangeRedCandles();
+    wrCandles.forEach(wrCandle => {
+        if (this.candleChart.isCandleThreeBarPlayIntroShort(wrCandle)) {
+            threeBarPlayIntros.push(wrCandle);
+        }
+    });
+    return threeBarPlayIntros;
+}
+
+/** Find all Wide Ranging Igniting bars WITH 3/4 Bar Play Intro in TODAYS DATE */
+CandleFacade.prototype.findThreeBarPlayIntrosTodayShort = function() {    
+    var threeBarPlayIntros = [];
+    var wrCandles = this.candleChart.findAllWideRangeRedCandles();
+
+    wrCandles = this.candleChart.filterDatesNotFromToday(wrCandles);
+    // wrCandles = this.candleChart.filterHoursLessThanHours(wrCandles, 2);
+
+    wrCandles.forEach(wrCandle => {
+        if (this.candleChart.isCandleThreeBarPlayIntroShort(wrCandle)) {
+            threeBarPlayIntros.push(wrCandle);
+        }
+    });
+    return threeBarPlayIntros;
+}
+
+
 
 
 exports.CandleFacade = CandleFacade;

@@ -15,14 +15,14 @@ class Candle {
         this.timeFrame = timeFrame;
     }
 
-    setTrendReversalCandleProperties(percentageDifferenceHeight, percentageDifferenceHigh) {
+    setTrendReversalCandleProperties(percentageDifferenceHeight, percentageDifferencePrice) {
         this.percentageDifferenceHeight = percentageDifferenceHeight;
-        this.percentageDifferenceHigh = percentageDifferenceHigh;
+        this.percentageDifferencePrice = percentageDifferencePrice;
     }
 
-    setWideRangeCandleProperties(percentageHeightAboveAverage, percentageHighAboveHigh, gapLevel) {
-        this.percentageHeightAboveAverage = percentageHeightAboveAverage;
-        this.percentageHighAboveHigh = percentageHighAboveHigh;
+    setWideRangeCandleProperties(percentageHeightComparedAverage, percentagePriceComparedAverage, gapLevel) {
+        this.percentageHeightComparedAverage = percentageHeightComparedAverage;
+        this.percentagePriceComparedAverage = percentagePriceComparedAverage;
         this.gapLevel = gapLevel;
     }
 
@@ -52,22 +52,47 @@ class Candle {
         return this.high - this.low;
     }
 
-    printThreeBarCandle() {
+    printThreeBarCandleLong() {
         var path = __dirname + "/Backtesting.txt";
 
         // fs.unlinkSync(path)
         console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
         console.log("2nd Bar Percentage Shorter: " + this.percentageDifferenceHeight);
-        console.log("Price High % Difference: " + this.percentageDifferenceHigh);
-        console.log("Height % Above Average: " + this.percentageHeightAboveAverage);
-        console.log("Price High % Above Average: " + this.percentageHighAboveHigh);
+        console.log("Price High % Difference: " + this.percentageDifferencePrice);
+        console.log("Height % Above Average: " + this.percentageHeightComparedAverage);
+        console.log("Price High % Above Average: " + this.percentagePriceComparedAverage);
         console.log("Gap Level: " + this.gapLevel + "\n");
 
         var str = `${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart\n`;
         str+="2nd Bar Percentage Shorter: " + this.percentageDifferenceHeight+"\n";
-        str+="Price High % Difference: " + this.percentageDifferenceHigh+"\n";
-        str+="Height % Above Average: " + this.percentageHeightAboveAverage+"\n";
-        str+="Price High % Above Average:" +this.percentageHighAboveHigh+"\n";
+        str+="Price High % Difference: " + this.percentageDifferencePrice+"\n";
+        str+="Height % Above Average: " + this.percentageHeightComparedAverage+"\n";
+        str+="Price High % Above Average:" +this.percentagePriceComparedAverage+"\n";
+        str+="Gap Level: " + this.gapLevel + "\n\n";
+
+        fs.appendFile(path, str, function (err) {
+            if (err) {
+                return console.log(err);
+            }
+        });
+    }
+
+    printThreeBarCandleShort() {
+        var path = __dirname + "/Backtesting.txt";
+
+        // fs.unlinkSync(path)
+        console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
+        console.log("2nd Bar Percentage Shorter: " + this.percentageDifferenceHeight);
+        console.log("Price Low % Difference: " + this.percentageDifferencePrice);
+        console.log("Height % Below Average: " + this.percentageHeightComparedAverage);
+        console.log("Price Low % Below Average: " + this.percentagePriceComparedAverage);
+        console.log("Gap Level: " + this.gapLevel + "\n");
+
+        var str = `${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart\n`;
+        str+="2nd Bar Percentage Shorter: " + this.percentageDifferenceHeight+"\n";
+        str+="Price Low % Difference: " + this.percentageDifferencePrice+"\n";
+        str+="Height % Below Average: " + this.percentageHeightComparedAverage+"\n";
+        str+="Price Low % Below Average:" +this.percentagePriceComparedAverage+"\n";
         str+="Gap Level: " + this.gapLevel + "\n\n";
 
         fs.appendFile(path, str, function (err) {
@@ -79,12 +104,13 @@ class Candle {
 
     printWideRangeCandle() {
         console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
-        console.log(`Height % Above Average: ${this.percentageHighAboveHigh}`);
-        console.log(`Height % Above Average: ${this.percentageHeightAboveAverage}\n`);
+        console.log(`Height % Above Average: ${this.percentagePriceComparedAverage}`);
+        console.log(`Height % Above Average: ${this.percentageHeightComparedAverage}\n`);
     }
 
     printGapCandle() {
         console.log(`${this.tickerSymbol} - Money Bar Time: ${this.timeStamp} on ${this.timeFrame} min chart`);
+        console.log("Price High % Difference: " + this.percentageDifferencePrice+"\n");
     }
 
 }
